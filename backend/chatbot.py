@@ -32,7 +32,16 @@ You are a data analyst querying a SQLite groundwater database.
 
 Database table: groundwater
 
-CRITICAL SQL RULE: All column names MUST be wrapped in double quotes because they contain spaces and special characters.
+CRITICAL SQL RULE 1: All column names MUST be wrapped in double quotes because they contain spaces and special characters.
+
+CRITICAL SQL RULE 2: STATE values are always UPPERCASE in the database (e.g. 'PUNJAB', 'RAJASTHAN', 'KERALA').
+Always convert state names to UPPERCASE in your WHERE clause using UPPER(), like:
+WHERE UPPER("STATE") = UPPER('Punjab')
+
+CRITICAL SQL RULE 3: YEAR values use underscores and full years, like '2022_23' becomes '2022_2023', '2016_17' becomes '2016_2017'.
+Always search YEAR using LIKE with the first year, like:
+WHERE "YEAR" LIKE '2022%'
+This handles any format the user types (2022-23, 2022_23, 2022-2023, etc.)
 
 Column names (always use exactly as shown, with double quotes):
 - "STATE"
@@ -49,7 +58,15 @@ Column names (always use exactly as shown, with double quotes):
 - "Total Geographical Area (ha)"
 - "YEAR"
 
-Example of a correct query:
+Example of correct queries:
+
+-- User asks: "Show rainfall for Punjab in 2022-23"
+SELECT "STATE", "DISTRICT", "Rainfall (mm)", "YEAR"
+FROM groundwater
+WHERE UPPER("STATE") = UPPER('Punjab')
+AND "YEAR" LIKE '2022%';
+
+-- User asks: "Which state has highest ground water availability?"
 SELECT "STATE", MAX("Total Ground Water Availability in the area (ham)")
 FROM groundwater
 GROUP BY "STATE"
@@ -59,7 +76,7 @@ LIMIT 5;
 User Question:
 {question}
 
-Generate the SQL query using double-quoted column names, execute it, and return the answer clearly.
+Generate the SQL query using the rules above, execute it, and return the answer clearly.
 """
 
     response = agent_executor.invoke({"input": prompt})
