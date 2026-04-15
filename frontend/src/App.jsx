@@ -6,7 +6,7 @@ import {
 } from "recharts"
 import { themes, getTheme, saveTheme, loadTheme } from "./themes"
 
-const BACKEND = "http://127.0.0.1:8000"
+const BACKEND = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
 const METRICS = [
   { value: "Rainfall (mm) Total", label: "Rainfall (mm)" },

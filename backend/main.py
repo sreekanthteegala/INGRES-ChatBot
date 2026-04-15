@@ -3,16 +3,25 @@ from pydantic import BaseModel
 from backend.chatbot_v2 import ask_database
 from backend.security import sanitize_input
 import sqlite3
+import os
 
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+# ─── CONFIGURATION ───────────────────────────────────────────
+DATABASE_PATH = os.getenv("DATABASE_PATH", "groundwater.db")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
 # ─── RATE LIMIT ──────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI(title="INGRES Groundwater Chatbot API")
+app = FastAPI(
+    title="INGRES Groundwater Chatbot API",
+    description="AI-powered chatbot for querying groundwater data from India's Central Ground Water Board",
+    version="2.0.0"
+)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -20,7 +29,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ─── CORS ────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,11 +46,11 @@ class FilterQuery(BaseModel):
 
 # ─── DATABASE CONNECTION ─────────────────────────────────────
 def get_db_connection():
-    return sqlite3.connect("groundwater.db")
+    return sqlite3.connect(DATABASE_PATH)
 
 # ─── RAW QUERY EXECUTION (OPTIONAL API) ──────────────────────
 def run_query(query):
-    conn = sqlite3.connect("groundwater.db")
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -51,7 +60,38 @@ def run_query(query):
 # ─── HOME ────────────────────────────────────────────────────
 @app.get("/")
 def home():
-    return {"message": "INGRES Groundwater Chatbot API Running"}
+    return {
+        "message": "INGRES Groundwater Chatbot API Running",
+        "version": "2.0.0",
+        "status": "healthy",
+        "endpoints": {
+            "chat": "/chat",
+            "filter_query": "/filter_query",
+            "top_states": "/top_states",
+            "docs": "/docs"
+        }
+    }
+
+# ─── HEALTH CHECK ────────────────────────────────────────────
+@app.get("/health")
+def health_check():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM groundwater")
+        count = cursor.fetchone()[0]
+        conn.close()
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "records": count
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "error": str(e)
+        }
 
 # ─── SAMPLE ENDPOINT ─────────────────────────────────────────
 @app.get("/top_states")

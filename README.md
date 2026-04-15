@@ -2,6 +2,13 @@
 
 An intelligent chatbot system for querying and analyzing groundwater data from India's Central Ground Water Board (CGWB). Built with FastAPI, React, and LangChain.
 
+## 🌐 Live Demo
+
+**🚀 Try it now**: [Coming Soon - Deploy using DEPLOYMENT_GUIDE.md]
+
+**Backend API**: [Your Render URL]  
+**API Documentation**: [Your Render URL]/docs
+
 ## 🎯 Features
 
 - **Natural Language Queries**: Ask questions in plain English about groundwater data
@@ -304,6 +311,30 @@ This project is developed for the Central Ground Water Board (CGWB), Ministry of
 ## 📧 Contact
 
 For questions or support, please contact the development team.
+
+---
+
+## 🚀 Deployment
+
+Ready to deploy? Follow our comprehensive guides:
+
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Step-by-step deployment instructions
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Quick checklist for deployment
+
+### Quick Deploy:
+
+**Backend (Render):**
+```bash
+Build: pip install -r requirements.txt
+Start: uvicorn backend.main:app --host 0.0.0.0 --port 10000
+```
+
+**Frontend (Vercel):**
+```bash
+Root: frontend
+Framework: Vite
+Env: VITE_API_URL=https://your-backend-url.onrender.com
+```
 
 ---
 
