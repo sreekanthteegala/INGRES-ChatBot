@@ -2,5 +2,54 @@
 venv/
 __pycache__/
 node_modules/
+
+# Database files (keep groundwater.db in repo for deployment)
 *.db
+!groundwater.db
+
+# Processed data (keep only cleaned version)
 processed_data/
+!processed_data/groundwater_cleaned.csv
+!processed_data/preprocessing_report.txt
+
+# Auto-generated reports and documentation
+*_REPORT.md
+*_AUDIT.md
+*_STATUS.md
+*_GUIDE.md
+*_SUMMARY.md
+*_COMPLETE.md
+DEPLOYMENT_*.md
+HALLUCINATION_*.md
+PREPROCESSING_*.md
+PROJECT_*.md
+QUICK_START.md
+SYSTEM_*.md
+USER_*.md
+CLEANUP_*.md
+
+# Temporary and test files
+temp_*.py
+test_*.py
+*_test.py
+debug_*.py
+*_debug.py
+*.log
+*.tmp
+
+# Old/backup files
+*_old.*
+*_backup.*
+old_*.*
+backup_*.*
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
