@@ -220,6 +220,104 @@ function DataChart({ items, theme }) {
   )
 }
 
+// New component for structured data charts
+function StructuredDataChart({ data, metric, theme }) {
+  if (!data || data.length === 0) return null
+  
+  const colors = theme.colors
+  
+  // Check if multi-year data
+  const isMultiYear = data.some(row => row.year)
+  
+  // For single-year, multiple states - show bar chart
+  if (!isMultiYear && data.length >= 2) {
+    const chartData = data.map(row => ({
+      name: row.state.length > 12 ? row.state.slice(0, 12) + '...' : row.state,
+      value: row.value,
+      full: row.state
+    })).slice(0, 10) // Limit to top 10 for readability
+    
+    return (
+      <div className={`mt-4 p-4 ${colors.chart} rounded-xl border`}>
+        <div className={`text-xs font-semibold ${colors.textTertiary} uppercase tracking-wide mb-3`}>
+          State Comparison Chart
+        </div>
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+            <XAxis dataKey="name" tick={{ fill: "#6b7280", fontSize: 11 }} angle={-45} textAnchor="end" height={80} />
+            <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} width={60} />
+            <Tooltip content={<CustomTooltip theme={theme} />} />
+            <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+              {chartData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
+  
+  // For multi-year data - show line chart with multiple lines
+  if (isMultiYear) {
+    // Group by state
+    const states = [...new Set(data.map(row => row.state))]
+    const years = [...new Set(data.map(row => row.year))].sort()
+    
+    // Limit to top 5 states for readability
+    const topStates = states.slice(0, 5)
+    
+    // Transform data for line chart
+    const chartData = years.map(year => {
+      const point = { year: year.replace('_', '-') }
+      topStates.forEach(state => {
+        const row = data.find(d => d.state === state && d.year === year)
+        point[state] = row ? row.value : null
+      })
+      return point
+    })
+    
+    return (
+      <div className={`mt-4 p-4 ${colors.chart} rounded-xl border`}>
+        <div className={`text-xs font-semibold ${colors.textTertiary} uppercase tracking-wide mb-3`}>
+          Multi-Year Trend Chart {topStates.length < states.length && `(Top ${topStates.length} States)`}
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="year" tick={{ fill: "#6b7280", fontSize: 11 }} />
+            <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} width={60} />
+            <Tooltip />
+            {topStates.map((state, i) => (
+              <Line 
+                key={state}
+                type="monotone" 
+                dataKey={state} 
+                stroke={CHART_COLORS[i % CHART_COLORS.length]} 
+                strokeWidth={2.5} 
+                dot={{ r: 4 }}
+                name={state}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="flex flex-wrap gap-2 mt-3">
+          {topStates.map((state, i) => (
+            <div key={state} className="flex items-center gap-1">
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+              />
+              <span className={`text-xs ${colors.text}`}>{state}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  
+  return null
+}
+
 function RankedList({ intro, items, theme }) {
   const chartData = extractChartData(items)
   const showChart = chartData && chartData.length >= 2
@@ -824,17 +922,20 @@ export default function App() {
                     <>
                       <BotMessage text={msg.text} theme={theme} />
                       {msg.data && (
-                        <DataTable 
-                          data={msg.data} 
-                          metric={msg.metric} 
-                          theme={theme}
-                          onDownload={() => downloadExcel(
-                            msg.data, 
-                            msg.queryParams?.metric || msg.metric,
-                            msg.queryParams?.states || [],
-                            msg.queryParams?.years || []
-                          )}
-                        />
+                        <>
+                          <StructuredDataChart data={msg.data} metric={msg.metric} theme={theme} />
+                          <DataTable 
+                            data={msg.data} 
+                            metric={msg.metric} 
+                            theme={theme}
+                            onDownload={() => downloadExcel(
+                              msg.data, 
+                              msg.queryParams?.metric || msg.metric,
+                              msg.queryParams?.states || [],
+                              msg.queryParams?.years || []
+                            )}
+                          />
+                        </>
                       )}
                     </>
                   ) : (
